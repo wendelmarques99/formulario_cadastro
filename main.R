@@ -8,13 +8,14 @@ library(magrittr)
 ui <- fluidRow(
 tags$head(HTML("<title>Cadastro</title>")),
  includeCSS("www/css.css"),
-  h1("Ficha Cadastral", id = "titulo"),
+  h1("Ficha Cadastral PF", id = "titulo"),
   p("Complete suas informações", id = "subtitulo"),
 tags$fieldset(class = "grupo",
+  p("PARA USO DO CLIENTE - DADOS DE IDENTIFICAÇÃO", id = "cliente_info"),
   tags$div(class = "campo",
     shiny::textInput("nome", "Nome:")), 
   tags$div(class = "campo", 
-  shiny::textInput("cpf_id", "CPF")), 
+  shiny::textInput("cpf_id", "CPF:")), 
   tags$div(class = "campo", 
            shiny::textInput("cep_id", "CEP:")),
   tags$div(class = "campo",
@@ -26,11 +27,9 @@ tags$fieldset(class = "grupo",
   tags$div(class = "campo", 
            shiny::textInput("dt_nasc_id", "Data Nascimento:")),
   tags$div(class = "campo", 
-           shiny::textInput("Prof_id", "Profissão:")),
-  tags$div(class = "campo", 
            shiny::textInput("nac_id", "Nacionalidade:")),
   tags$div(class = "campo", 
-           shiny::textInput("end_resid" , "Endereço Residencial")),
+           shiny::textInput("end_resid" , "Endereço Residencial:")),
   tags$div(class = "campo", 
            shiny::textInput("Num_id", "Número:")),
   tags$div(class = "campo", 
@@ -48,6 +47,47 @@ tags$fieldset(class = "grupo",
   tags$div(class = "campo", 
            shiny::textInput("email_id", "Email:"))
   ),
+  tags$fieldset(class = "grupo", 
+                p("INFORMAÇÕES ECONÔMICAS-FINANCEIRAS", id = "info_financeira"),
+                tags$div(class = "campo", 
+                         shiny::textInput("empresaid" , "Empresa em que trabalha:", placeholder = "(se houver)")),
+                tags$div(class = "campo", 
+                         shiny::textInput("cargojobid" , "Cargo:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("CEP_ID2" , "CEP: ")),
+                tags$div(class = "campo", 
+                         shiny::textInput("endcomercialid" , "Endereço Comercial:", placeholder = "(se houver)")),
+                tags$div(class = "campo", 
+                         shiny::textInput("numberresid" , "Número:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("compidcompany" , "Complemento:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("bairrocnpjid" , "Bairro:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("city_id2" , "Cidade: ")),
+                tags$div(class = "campo", 
+                         shiny::textInput("uf_id2" , "UF:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("rendimento_salario" , "Rendimento Mensal Salário: ")), 
+                tags$div(class = "campo", 
+                         shiny::textInput("patrimonio_id" , "Patrimônio: "))),
+  tags$fieldset(class = "grupo", 
+                p("REFERÊNCIAS BANCÁRIAS E COMERCIAS", id = "info_bancarias"),
+                tags$div(class = "campo", 
+                         shiny::textInput("banco1id" , "Banco 01:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("agencia01" , "Agência 01:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("cc01" , "Conta Corrente 01:"))
+                ),
+  tags$fieldset(class = "grupo", 
+                tags$div(class = "campo", 
+                         shiny::textInput("banco2id" , "Banco 02:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("agencia02" , "Agência 02:")),
+                tags$div(class = "campo", 
+                         shiny::textInput("cc02" , "Conta Corrente 02:"))
+                ),
     downloadButton("baixar", "Baixar Documento")
 )
 
@@ -56,6 +96,12 @@ tags$fieldset(class = "grupo",
 # Server ------------------------------------------------------------------
 server <- function(session, input, output) {
   
+
+# Funcao para colocar vazio se nao tiver conteudo -------------------------
+verifica_conteudo <- function(x){
+  ifelse(x == "", "", x)
+}
+
 
 # Logica do CEP para cidade -----------------------------------------------
   shiny::observe({
@@ -97,10 +143,46 @@ server <- function(session, input, output) {
 }
       
 })
-
-
-
   
+  shiny::observe({
+    
+    shiny::req(input$CEP_ID2)
+    
+    y <- input$CEP_ID2
+    
+    if( stringi::stri_length(y) == 8){
+      
+      lista_output_cep2 <- cepR::busca_cep(y ,"3dd9411dfe4ae483ebb85dd6f35082f7") 
+      
+      shiny::updateTextInput(session, "city_id2",
+                             value = lista_output_cep2 %>% dplyr::pull(cidade)) 
+      
+      shiny::updateTextInput(session, "uf_id2",
+                             value = lista_output_cep2 %>% dplyr::pull(estado)) 
+      
+      shiny::updateTextInput(session, "bairrocnpjid",
+                             value = lista_output_cep2 %>% dplyr::pull(bairro))
+      
+      shiny::updateTextInput(session, "endcomercialid",
+                             value = lista_output_cep2 %>% dplyr::pull(logradouro))
+    } else{
+      
+      shiny::updateTextInput(session, "city_id2",
+                             value = "")
+      
+      shiny::updateTextInput(session, "uf_id2",
+                             value = "") 
+      
+      shiny::updateTextInput(session, "bairrocnpjid",
+                             value = "")
+      
+      shiny::updateTextInput(session, "endcomercialid",
+                             value = "")
+      
+    }
+      
+  })
+
   output$baixar <- downloadHandler(
     filename = function() {  
       glue::glue("{input$nome}_cadastro_bexs.docx")
@@ -110,19 +192,42 @@ server <- function(session, input, output) {
       doc <- officer::read_docx("www/Ficha_PF.docx")
       
       out <- doc %>% 
-        officer::body_replace_all_text("name", input$nome) %>% 
-        officer::body_replace_all_text("Doc_id", input$doc_id) %>% 
-        officer::body_replace_all_text("Cep_number", input$cep_id) %>% 
-        officer::body_replace_all_text("Cpf_number", input$cpf_id) %>% 
-        officer::body_replace_all_text("job", input$prof_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) %>% 
-        officer::body_replace_all_text("org_exp", input$org_id) 
+        officer::body_replace_all_text("name", verifica_conteudo(input$nome)) %>% 
+        officer::body_replace_all_text("Doc_id", verifica_conteudo(input$doc_id)) %>% 
+        officer::body_replace_all_text("Cep_number", verifica_conteudo(input$cep_id)) %>% 
+        officer::body_replace_all_text("Cpf_number", verifica_conteudo(input$cpf_id)) %>% 
+        officer::body_replace_all_text("job", verifica_conteudo(input$prof_id)) %>% 
+        officer::body_replace_all_text("org_exp", verifica_conteudo(input$org_id)) %>% 
+        officer::body_replace_all_text("Dt_nascimento", verifica_conteudo(input$dt_nasc_id)) %>% 
+        officer::body_replace_all_text("End_resid", verifica_conteudo(input$end_resid)) %>%
+        officer::body_replace_all_text("Number_house", verifica_conteudo(input$Num_id)) %>% 
+        officer::body_replace_all_text("complementoid", verifica_conteudo(input$Comple_id)) %>% 
+        officer::body_replace_all_text("Bairro_nome", verifica_conteudo(input$bairro_id)) %>% 
+        officer::body_replace_all_text("cidadeid", verifica_conteudo(input$city_id)) %>% 
+        officer::body_replace_all_text("feder", verifica_conteudo(input$uf_id)) %>% 
+        officer::body_replace_all_text("Fone_res", verifica_conteudo(input$fone_id)) %>%  
+        officer::body_replace_all_text("Fone_cel", verifica_conteudo(input$fone_ceclular_id)) %>% 
+        officer::body_replace_all_text("Email_id", verifica_conteudo(input$email_id)) %>% 
+        officer::body_replace_all_text("nacionalidade", verifica_conteudo(input$nac_id)) %>% 
+        officer::body_replace_all_text("workid", verifica_conteudo(input$empresaid)) %>% 
+        officer::body_replace_all_text("profiid", verifica_conteudo(input$cargojobid)) %>% 
+        officer::body_replace_all_text("adress", verifica_conteudo(input$endcomercialid)) %>%  
+        officer::body_replace_all_text("district", verifica_conteudo(input$bairrocnpjid)) %>% 
+        officer::body_replace_all_text("Cityid2", verifica_conteudo(input$city_id2)) %>% 
+        officer::body_replace_all_text("uffed", verifica_conteudo(input$uf_id2)) %>% 
+        officer::body_replace_all_text("replacenumber", verifica_conteudo(input$numberresid)) %>%
+        officer::body_replace_all_text("complement", verifica_conteudo(input$compidcompany)) %>%
+        officer::body_replace_all_text("cepcnpjid", verifica_conteudo(input$CEP_ID2)) %>% 
+        officer::body_replace_all_text("Rend_mensal_pf", verifica_conteudo(input$rendimento_salario)) %>% 
+        officer::body_replace_all_text("PL_pf", verifica_conteudo(input$patrimonio_id)) %>% 
+        officer::body_replace_all_text("Banco_1", verifica_conteudo(input$banco1id)) %>%
+        officer::body_replace_all_text("Agencia01", verifica_conteudo(input$agencia01)) %>% 
+        officer::body_replace_all_text("Cc_1", verifica_conteudo(input$cc01)) %>% 
+        officer::body_replace_all_text("Banco_2", verifica_conteudo(input$banco2id)) %>% 
+        officer::body_replace_all_text("Agencia02", verifica_conteudo(input$agencia02)) %>% 
+        officer::body_replace_all_text("Cc_2", verifica_conteudo(input$cc02)) 
+        
+        
       
       print(out, target = file)
     }

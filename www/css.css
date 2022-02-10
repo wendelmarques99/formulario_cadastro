@@ -10,9 +10,27 @@
     font-family: sans-serif;
     color: #00d084;
     margin-left: 22%;
-    margin-top: 3%;
+    margin-top: 1%;
 } 
 
+#cliente_info{
+    color: #89929c;
+    margin-bottom: .5%;
+    margin-top: 1%;
+    font-size: 0.8em;
+}
+#info_financeira{
+    color: #89929c;
+    margin-bottom: 0.5%;
+    margin-top: 0.5%;
+    font-size: 0.8em;
+}
+#info_bancarias{
+    color: #89929c;
+    margin-bottom: 0.5%;
+    margin-top: 0.5%;
+    font-size: 0.8em;
+}
 /* Elementos com o ID "subtitulo" */
 #subtitulo {
     font-family: sans-serif;
@@ -23,8 +41,8 @@
 /* Elementos de tag <fieldset>*/
 fieldset {
     border: 0;
-    margin-bottom: 20%;
-    margin: 40px;
+    margin-bottom: 1%;
+    margin: 5px;
 }
 /* Elemento de tag <body> */
 body{
@@ -74,7 +92,7 @@ fieldset.grupo .campo {
 
 /* Elementos de classe "campo" das tags <input> com atributo text e email, da tag <select> e da tag <textarea>*/
 .campo input[type="text"]{
-    padding: 0.2em;
+    padding: 0.1em;
     border: 1px solid #00d084;
     box-shadow: 2px 2px 2px rgba(0,0,0,0.2);
     display: block;
