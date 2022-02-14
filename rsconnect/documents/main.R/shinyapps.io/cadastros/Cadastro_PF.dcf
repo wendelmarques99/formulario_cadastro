@@ -1,0 +1,13 @@
+name: Cadastro_PF
+title: Cadastro_PF
+username:
+account: cadastros
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 5635561
+bundleId: 5577615
+url: https://cadastros.shinyapps.io/Cadastro_PF/
+when: 1644849656.71925
+lastSyncTime: 1644849656.71925
+asMultiple: FALSE
+asStatic: FALSE

@@ -3,7 +3,6 @@ library(shiny)
 library(officer)
 library(magrittr)
 
-
 # UI ----------------------------------------------------------------------
 ui <- fluidRow(
 tags$head(HTML("<title>Cadastro</title>")),
@@ -88,20 +87,21 @@ tags$fieldset(class = "grupo",
                 tags$div(class = "campo", 
                          shiny::textInput("cc02" , "Conta Corrente 02:"))
                 ),
-    downloadButton("baixar", "Baixar Documento")
+    br(),
+    br(),
+    downloadButton("baixar", "Baixar Documento", class = "botao")
 )
+
 
 
 
 # Server ------------------------------------------------------------------
 server <- function(session, input, output) {
   
-
 # Funcao para colocar vazio se nao tiver conteudo -------------------------
 verifica_conteudo <- function(x){
   ifelse(x == "", "", x)
 }
-
 
 # Logica do CEP para cidade -----------------------------------------------
   shiny::observe({
@@ -182,7 +182,7 @@ verifica_conteudo <- function(x){
     }
       
   })
-
+  
   output$baixar <- downloadHandler(
     filename = function() {  
       glue::glue("{input$nome}_cadastro_bexs.docx")
@@ -227,8 +227,6 @@ verifica_conteudo <- function(x){
         officer::body_replace_all_text("Agencia02", verifica_conteudo(input$agencia02)) %>% 
         officer::body_replace_all_text("Cc_2", verifica_conteudo(input$cc02)) 
         
-        
-      
       print(out, target = file)
     }
   )
