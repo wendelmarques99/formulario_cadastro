@@ -110,21 +110,31 @@ verifica_conteudo <- function(x){
     
     x <- input$cep_id
     
-    if (stringi::stri_length(x) == 8){
+    link <- glue::glue("https://viacep.com.br/ws/{x}/json")  
+    
+    lista_output_cep <-  httr::GET(link)
+    
+    if (lista_output_cep$status_code == 200){
       
-    lista_output_cep <- cepR::busca_cep(x ,"3dd9411dfe4ae483ebb85dd6f35082f7") 
+      lista_output_cep <- lista_output_cep %>%
+      httr::content("text") %>% 
+      jsonlite::fromJSON(flatten = TRUE) %>% 
+      dplyr::bind_rows()
     
     shiny::updateTextInput(session, "city_id",
-                           value = lista_output_cep %>% dplyr::pull(cidade)) 
+                           value = lista_output_cep %>% dplyr::pull(localidade)) 
     
     shiny::updateTextInput(session, "uf_id",
-                           value = lista_output_cep %>% dplyr::pull(estado)) 
+                           value = lista_output_cep %>% dplyr::pull(uf)) 
     
     shiny::updateTextInput(session, "bairro_id",
                            value = lista_output_cep %>% dplyr::pull(bairro))
     
     shiny::updateTextInput(session, "end_resid",
                            value = lista_output_cep %>% dplyr::pull(logradouro))
+    
+
+      
     
 } else{
   
@@ -189,7 +199,7 @@ verifica_conteudo <- function(x){
     },
     content = function(file) {
       
-      doc <- officer::read_docx("www/Ficha_PF.docx")
+      doc <- officer::read_docx("www/Ficha_PF2.docx")
       
       out <- doc %>% 
         officer::body_replace_all_text("name", verifica_conteudo(input$nome)) %>% 
